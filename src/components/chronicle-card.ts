@@ -86,16 +86,47 @@ export class ChronicleCard extends LitElement {
     this._storeUnsub?.();
   }
 
+  protected willUpdate(): void {
+    // Reflect a `fill` attribute so :host([fill]) styles stretch the card to
+    // the height the dashboard hands us (Panel layout, fixed-height grids).
+    const h = this._config?.appearance?.card_height;
+    this.toggleAttribute('fill', h === 'fill' || h === '100%');
+  }
+
   static styles = css`
     :host {
       display: block;
       contain: content;
     }
 
+    /* Fill mode (card_height: fill / 100%) — stretch the whole chain to the
+       height the dashboard gives us, e.g. Panel layout. */
+    :host([fill]) {
+      height: 100%;
+    }
+
     ha-card {
       overflow: hidden;
       background: var(--ha-card-background, var(--card-background-color, #fff));
       border-radius: var(--ha-card-border-radius, 12px);
+    }
+
+    :host([fill]) ha-card {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    :host([fill]) .card-content {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    :host([fill]) .card-content > * {
+      flex: 1 1 auto;
+      min-height: 0;
     }
 
     .card-header {

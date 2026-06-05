@@ -1,3 +1,15 @@
+# Chronicle Card v1.12.1 — Editor Field Fixes & Panel Fill Height
+
+## Bug Fixes
+
+- **All config-editor text/number fields now render in Safari & Firefox (#16).** Title, Max Events, Days Back, the Grouping window/min-size/group-name fields, Card Height, REST URL / Response Path / Media URL Template / Poll Interval, action navigation/service paths, and per-entity state-label rows previously used raw `ha-textfield` / `ha-select`, which didn't render reliably across browsers (the label showed but the input was invisible — reported on Mac/iPhone Safari and macOS Firefox). Every one of these is now an `ha-selector`, the same primitive the rest of the editor already uses. The visual editor is now `ha-selector`-only for text, number, and select inputs.
+
+## New Features
+
+- **`card_height: fill` for Panel layout (#17).** A new `fill` value (also accepts `100%`) makes the card stretch to the full height the dashboard gives it — e.g. HA's Panel layout, where the card previously capped at ~460px and left the lower dashboard empty. The editor's Card Height field is now a dropdown with **400px (default)**, **Fill available space (Panel layout)**, and **Auto (grow with content)** presets, and still accepts a custom value. Fixed-height and `auto` behavior are unchanged.
+
+---
+
 # Chronicle Card v1.12.0 — Per-Source Grouping & Custom Group Names
 
 ## New Features

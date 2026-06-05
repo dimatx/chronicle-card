@@ -438,7 +438,7 @@ appearance:
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `card_height` | string | `400px` | Fixed height with scroll, or `auto` for no limit |
+| `card_height` | string | `400px` | Fixed height with scroll (e.g. `400px`), `fill` to stretch to the full dashboard height (Panel layout), or `auto` for no limit |
 | `compact` | boolean | `false` | Reduced padding and hidden descriptions |
 | `show_images` | boolean | `true` | Show event thumbnails |
 | `show_icons` | boolean | `true` | Show category icons |

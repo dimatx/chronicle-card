@@ -268,7 +268,7 @@ export class SourceEditor extends LitElement {
       align-items: flex-end;
       margin-bottom: 4px;
     }
-    .state-label-row ha-textfield {
+    .state-label-row ha-selector {
       flex: 1;
     }
     .state-label-remove {
@@ -577,22 +577,24 @@ export class SourceEditor extends LitElement {
       case 'rest':
         return html`
           <div class="field">
-            <label>API URL</label>
-            <ha-textfield
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{ text: {} }}
               .value=${this.source.url ?? ''}
-              .label=${"llmvision/timeline/events?limit=50"}
-              @input=${(e: any) => this._update('url', e.target.value)}
-            ></ha-textfield>
-            <p class="help-text">Internal HA API path (no /api/ prefix needed) or full external URL</p>
+              .label=${'API URL'}
+              .helper=${'Internal HA API path (no /api/ prefix needed) or full external URL'}
+              @value-changed=${(e: any) => this._update('url', e.detail.value)}
+            ></ha-selector>
           </div>
           <div class="field">
-            <label>Response Path</label>
-            <ha-textfield
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{ text: {} }}
               .value=${this.source.response_path ?? ''}
-              .label=${"events"}
-              @input=${(e: any) => this._update('response_path', e.target.value)}
-            ></ha-textfield>
-            <p class="help-text">Dot-path to the array in the JSON response (e.g. "events" or "data.items")</p>
+              .label=${'Response path'}
+              .helper=${'Dot-path to the array in the JSON response (e.g. "events" or "data.items")'}
+              @value-changed=${(e: any) => this._update('response_path', e.detail.value)}
+            ></ha-selector>
           </div>
           <div class="field">
             <label>Field Map (JSON)</label>
@@ -604,13 +606,14 @@ export class SourceEditor extends LitElement {
             <p class="help-text">Maps response fields to: id, title, description, start, end, mediaUrl, category, label, entityId</p>
           </div>
           <div class="field">
-            <label>Media URL Template</label>
-            <ha-textfield
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{ text: {} }}
               .value=${this.source.media_url_template ?? ''}
-              .label=${"/api/frigate/notifications/{id}/snapshot.jpg"}
-              @input=${(e: any) => this._update('media_url_template', e.target.value)}
-            ></ha-textfield>
-            <p class="help-text">Build image URL from response fields using {field} placeholders. Overrides mediaUrl field mapping.</p>
+              .label=${'Media URL template'}
+              .helper=${'Build image URL from response fields using {field} placeholders. Overrides mediaUrl field mapping.'}
+              @value-changed=${(e: any) => this._update('media_url_template', e.detail.value)}
+            ></ha-selector>
           </div>
           <div class="field">
             <label>WebSocket Params (JSON)</label>
@@ -622,13 +625,13 @@ export class SourceEditor extends LitElement {
             <p class="help-text">Use WebSocket instead of REST. Overrides API URL. Required for Frigate events.</p>
           </div>
           <div class="field">
-            <label>Poll Interval (seconds)</label>
-            <ha-textfield
-              type="number"
-              .value=${String(this.source.poll_interval ?? 60)}
-              .label=${"Poll interval"}
-              @input=${(e: any) => this._update('poll_interval', Number(e.target.value))}
-            ></ha-textfield>
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{ number: { min: 1, max: 3600, mode: 'box', unit_of_measurement: 'seconds' } }}
+              .value=${this.source.poll_interval ?? 60}
+              .label=${'Poll interval'}
+              @value-changed=${(e: any) => this._update('poll_interval', e.detail.value)}
+            ></ha-selector>
           </div>
         `;
 
@@ -727,16 +730,20 @@ export class SourceEditor extends LitElement {
             <label>State Labels</label>
             ${stateMapEntries.map(([state, label], idx) => html`
               <div class="state-label-row">
-                <ha-textfield
+                <ha-selector
+                  .hass=${this.hass}
+                  .selector=${{ text: {} }}
                   .value=${state}
-                  .label=${"State value"}
-                  @change=${(e: any) => this._updateStateMapKey(entityId, idx, e.target.value, label)}
-                ></ha-textfield>
-                <ha-textfield
+                  .label=${'State value'}
+                  @value-changed=${(e: any) => this._updateStateMapKey(entityId, idx, e.detail.value, label)}
+                ></ha-selector>
+                <ha-selector
+                  .hass=${this.hass}
+                  .selector=${{ text: {} }}
                   .value=${label}
-                  .label=${"Display label"}
-                  @change=${(e: any) => this._updateStateMapValue(entityId, state, e.target.value)}
-                ></ha-textfield>
+                  .label=${'Display label'}
+                  @value-changed=${(e: any) => this._updateStateMapValue(entityId, state, e.detail.value)}
+                ></ha-selector>
                 <button
                   class="state-label-remove"
                   @click=${() => this._removeStateMapEntry(entityId, state)}
@@ -869,20 +876,22 @@ export class SourceEditor extends LitElement {
         @value-changed=${(e: any) => this._onActionTypeChange(key, e.detail.value)}
       ></ha-selector>
       ${config?.action === 'navigate' ? html`
-        <ha-textfield
+        <ha-selector
+          .hass=${this.hass}
+          .selector=${{ text: {} }}
           .value=${config.navigation_path ?? ''}
-          .label=${"Navigation path"}
-          @input=${(e: any) => this._updateActionField(key, 'navigation_path', e.target.value)}
-          style="margin-top: 4px;"
-        ></ha-textfield>
+          .label=${'Navigation path'}
+          @value-changed=${(e: any) => this._updateActionField(key, 'navigation_path', e.detail.value)}
+        ></ha-selector>
       ` : nothing}
       ${config?.action === 'call-service' ? html`
-        <ha-textfield
+        <ha-selector
+          .hass=${this.hass}
+          .selector=${{ text: {} }}
           .value=${config.service ?? ''}
-          .label=${"Service (e.g. light.toggle)"}
-          @input=${(e: any) => this._updateActionField(key, 'service', e.target.value)}
-          style="margin-top: 4px;"
-        ></ha-textfield>
+          .label=${'Service (e.g. light.toggle)'}
+          @value-changed=${(e: any) => this._updateActionField(key, 'service', e.detail.value)}
+        ></ha-selector>
       ` : nothing}
     `;
   }
@@ -923,24 +932,26 @@ export class SourceEditor extends LitElement {
         }}
       ></ha-selector>
       ${config?.action === 'navigate' ? html`
-        <ha-textfield
+        <ha-selector
+          .hass=${this.hass}
+          .selector=${{ text: {} }}
           .value=${config.navigation_path ?? ''}
-          .label=${"Navigation path"}
-          @input=${(e: any) => {
-            this._updateEntityConfig(entityId, key, { ...(config ?? {}), navigation_path: e.target.value || undefined });
+          .label=${'Navigation path'}
+          @value-changed=${(e: any) => {
+            this._updateEntityConfig(entityId, key, { ...(config ?? {}), navigation_path: e.detail.value || undefined });
           }}
-          style="margin-top: 4px;"
-        ></ha-textfield>
+        ></ha-selector>
       ` : nothing}
       ${config?.action === 'call-service' ? html`
-        <ha-textfield
+        <ha-selector
+          .hass=${this.hass}
+          .selector=${{ text: {} }}
           .value=${config.service ?? ''}
-          .label=${"Service (e.g. light.toggle)"}
-          @input=${(e: any) => {
-            this._updateEntityConfig(entityId, key, { ...(config ?? {}), service: e.target.value || undefined });
+          .label=${'Service (e.g. light.toggle)'}
+          @value-changed=${(e: any) => {
+            this._updateEntityConfig(entityId, key, { ...(config ?? {}), service: e.detail.value || undefined });
           }}
-          style="margin-top: 4px;"
-        ></ha-textfield>
+        ></ha-selector>
       ` : nothing}
     `;
   }

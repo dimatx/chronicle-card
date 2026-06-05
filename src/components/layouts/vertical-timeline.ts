@@ -27,6 +27,19 @@ export class VerticalTimeline extends LitElement {
       display: block;
     }
 
+    /* Fill mode — host + container stretch to the parent's available height
+       (set by chronicle-card's :host([fill]) flex chain). */
+    :host(.fill) {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    :host(.fill) .timeline-container {
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+
     .timeline-container {
       position: relative;
       overflow-y: auto;
@@ -82,7 +95,9 @@ export class VerticalTimeline extends LitElement {
 
     const sections = this._groupByDate(this.items);
     const height = this.appearance?.card_height ?? '400px';
-    const style = height === 'auto' ? '' : `max-height: ${height}`;
+    const fill = height === 'fill' || height === '100%';
+    const style = fill || height === 'auto' ? '' : `max-height: ${height}`;
+    this.classList.toggle('fill', fill);
 
     return html`
       <div class="timeline-container" style=${style}>

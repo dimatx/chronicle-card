@@ -162,55 +162,64 @@ export class ChronicleEditor extends LitElement {
           <summary>General</summary>
           <div class="section-body">
             <div class="field">
-              <label>Title</label>
-              <ha-textfield
+              <ha-selector
+                .hass=${this.hass}
+                .selector=${{ text: {} }}
                 .value=${c.title ?? ''}
-                .label=${"Card title"}
-                @input=${(e: any) => this._set('title', e.target.value)}
-              ></ha-textfield>
+                .label=${'Title'}
+                @value-changed=${(e: any) => this._set('title', e.detail.value)}
+              ></ha-selector>
             </div>
             <div class="row">
               <div class="field">
-                <label>Layout</label>
-                <ha-select
+                <ha-selector
+                  .hass=${this.hass}
+                  .selector=${{ select: {
+                    options: [
+                      { value: 'vertical',   label: 'Vertical'   },
+                      { value: 'horizontal', label: 'Horizontal' },
+                    ],
+                    mode: 'dropdown',
+                  } }}
                   .value=${c.layout ?? 'vertical'}
-                  @change=${(e: any) => this._set('layout', e.target.value)}
-                  @closed=${(e: any) => e.stopPropagation()}
-                >
-                  <mwc-list-item value="vertical">Vertical</mwc-list-item>
-                  <mwc-list-item value="horizontal">Horizontal</mwc-list-item>
-                </ha-select>
+                  .label=${'Layout'}
+                  @value-changed=${(e: any) => this._set('layout', e.detail.value)}
+                ></ha-selector>
               </div>
               <div class="field">
-                <label>Time Format</label>
-                <ha-select
+                <ha-selector
+                  .hass=${this.hass}
+                  .selector=${{ select: {
+                    options: [
+                      { value: '24h', label: '24 Hour' },
+                      { value: '12h', label: '12 Hour' },
+                    ],
+                    mode: 'dropdown',
+                  } }}
                   .value=${c.time_format ?? '24h'}
-                  @change=${(e: any) => this._set('time_format', e.target.value)}
-                  @closed=${(e: any) => e.stopPropagation()}
-                >
-                  <mwc-list-item value="24h">24 Hour</mwc-list-item>
-                  <mwc-list-item value="12h">12 Hour</mwc-list-item>
-                </ha-select>
+                  .label=${'Time format'}
+                  @value-changed=${(e: any) => this._set('time_format', e.detail.value)}
+                ></ha-selector>
               </div>
             </div>
             <div class="row">
               <div class="field">
-                <label>Max Events</label>
-                <ha-textfield
-                  type="number"
-                  .value=${String(c.max_events ?? 50)}
-                  .label=${"Max events"}
-                  @input=${(e: any) => this._set('max_events', Number(e.target.value))}
-                ></ha-textfield>
+                <ha-selector
+                  .hass=${this.hass}
+                  .selector=${{ number: { min: 1, max: 1000, mode: 'box' } }}
+                  .value=${c.max_events ?? 50}
+                  .label=${'Max events'}
+                  @value-changed=${(e: any) => this._set('max_events', e.detail.value)}
+                ></ha-selector>
               </div>
               <div class="field">
-                <label>Days Back</label>
-                <ha-textfield
-                  type="number"
-                  .value=${String(c.days_back ?? 7)}
-                  .label=${"Days back"}
-                  @input=${(e: any) => this._set('days_back', Number(e.target.value))}
-                ></ha-textfield>
+                <ha-selector
+                  .hass=${this.hass}
+                  .selector=${{ number: { min: 1, max: 365, mode: 'box', unit_of_measurement: 'days' } }}
+                  .value=${c.days_back ?? 7}
+                  .label=${'Days back'}
+                  @value-changed=${(e: any) => this._set('days_back', e.detail.value)}
+                ></ha-selector>
               </div>
             </div>
             <div class="toggle-row">
@@ -252,12 +261,14 @@ export class ChronicleEditor extends LitElement {
           <summary>Filters</summary>
           <div class="section-body">
             <div class="field">
-              <label>Search</label>
-              <ha-textfield
+              <ha-selector
+                .hass=${this.hass}
+                .selector=${{ text: {} }}
                 .value=${c.filters?.search ?? ''}
-                .label=${"Filter events by keyword..."}
-                @input=${(e: any) => this._setNested('filters', 'search', e.target.value)}
-              ></ha-textfield>
+                .label=${'Search'}
+                .helper=${'Filter events by keyword'}
+                @value-changed=${(e: any) => this._setNested('filters', 'search', e.detail.value)}
+              ></ha-selector>
             </div>
             <div class="field">
               <ha-selector
@@ -320,12 +331,14 @@ export class ChronicleEditor extends LitElement {
               <summary>Exclusions</summary>
               <div class="section-body">
                 <div class="field">
-                  <label>Exclude Search</label>
-                  <ha-textfield
+                  <ha-selector
+                    .hass=${this.hass}
+                    .selector=${{ text: {} }}
                     .value=${c.filters?.exclude_search ?? ''}
-                    .label=${"Hide events matching keyword..."}
-                    @input=${(e: any) => this._setNested('filters', 'exclude_search', e.target.value)}
-                  ></ha-textfield>
+                    .label=${'Exclude search'}
+                    .helper=${'Hide events matching keyword'}
+                    @value-changed=${(e: any) => this._setNested('filters', 'exclude_search', e.detail.value)}
+                  ></ha-selector>
                 </div>
                 <div class="field">
                   <ha-selector
@@ -396,46 +409,50 @@ export class ChronicleEditor extends LitElement {
             </div>
             <div class="row">
               <div class="field">
-                <label>Window (seconds)</label>
-                <ha-textfield
-                  type="number"
-                  .value=${String(g.window_seconds ?? 120)}
-                  .label=${"Window seconds"}
-                  @input=${(e: any) => this._setNested('grouping', 'window_seconds', Number(e.target.value))}
-                ></ha-textfield>
+                <ha-selector
+                  .hass=${this.hass}
+                  .selector=${{ number: { min: 0, max: 3600, mode: 'box', unit_of_measurement: 'seconds' } }}
+                  .value=${g.window_seconds ?? 120}
+                  .label=${'Window (seconds)'}
+                  @value-changed=${(e: any) => this._setNested('grouping', 'window_seconds', e.detail.value)}
+                ></ha-selector>
               </div>
               <div class="field">
-                <label>Min Group Size</label>
-                <ha-textfield
-                  type="number"
-                  .value=${String(g.min_group_size ?? 3)}
-                  .label=${"Min group size"}
-                  @input=${(e: any) => this._setNested('grouping', 'min_group_size', Number(e.target.value))}
-                ></ha-textfield>
+                <ha-selector
+                  .hass=${this.hass}
+                  .selector=${{ number: { min: 1, max: 100, mode: 'box' } }}
+                  .value=${g.min_group_size ?? 3}
+                  .label=${'Min group size'}
+                  @value-changed=${(e: any) => this._setNested('grouping', 'min_group_size', e.detail.value)}
+                ></ha-selector>
               </div>
             </div>
             <div class="field">
-              <label>Group By</label>
-              <ha-select
+              <ha-selector
+                .hass=${this.hass}
+                .selector=${{ select: {
+                  options: [
+                    { value: 'category', label: 'Category' },
+                    { value: 'source',   label: 'Source'   },
+                    { value: 'entity',   label: 'Entity'   },
+                    { value: 'none',     label: 'None'     },
+                  ],
+                  mode: 'dropdown',
+                } }}
                 .value=${g.group_by ?? 'category'}
-                @change=${(e: any) => this._setNested('grouping', 'group_by', e.target.value)}
-                @closed=${(e: any) => e.stopPropagation()}
-              >
-                <mwc-list-item value="category">Category</mwc-list-item>
-                <mwc-list-item value="source">Source</mwc-list-item>
-                <mwc-list-item value="entity">Entity</mwc-list-item>
-                <mwc-list-item value="none">None</mwc-list-item>
-              </ha-select>
+                .label=${'Group by'}
+                @value-changed=${(e: any) => this._setNested('grouping', 'group_by', e.detail.value)}
+              ></ha-selector>
             </div>
             <div class="field">
-              <label>Group Name</label>
-              <ha-textfield
+              <ha-selector
+                .hass=${this.hass}
+                .selector=${{ text: {} }}
                 .value=${g.group_name ?? ''}
-                .label=${"Optional — e.g. {count} {label} events"}
-                .helper=${"Custom summary label. Placeholders: {count}, {label}, {source}, {entity}. Leave empty for the default \"N X events\" summary."}
-                helperPersistent
-                @input=${(e: any) => this._setNested('grouping', 'group_name', e.target.value || undefined)}
-              ></ha-textfield>
+                .label=${'Group name'}
+                .helper=${'Custom summary label. Placeholders: {count}, {label}, {source}, {entity}. Leave empty for the default "N X events" summary.'}
+                @value-changed=${(e: any) => this._setNested('grouping', 'group_name', e.detail.value || undefined)}
+              ></ha-selector>
             </div>
           </div>
         </details>
@@ -445,12 +462,22 @@ export class ChronicleEditor extends LitElement {
           <summary>Appearance</summary>
           <div class="section-body">
             <div class="field">
-              <label>Card Height</label>
-              <ha-textfield
+              <ha-selector
+                .hass=${this.hass}
+                .selector=${{ select: {
+                  options: [
+                    { value: '400px', label: '400px (default)' },
+                    { value: 'fill',  label: 'Fill available space (Panel layout)' },
+                    { value: 'auto',  label: 'Auto (grow with content)' },
+                  ],
+                  custom_value: true,
+                  mode: 'dropdown',
+                } }}
                 .value=${a.card_height ?? '400px'}
-                .label=${"400px or auto"}
-                @input=${(e: any) => this._setNested('appearance', 'card_height', e.target.value)}
-              ></ha-textfield>
+                .label=${'Card height'}
+                .helper=${'A fixed height (e.g. 400px), "fill" to use the full dashboard height (Panel layout), or "auto" to grow with content.'}
+                @value-changed=${(e: any) => this._setNested('appearance', 'card_height', e.detail.value)}
+              ></ha-selector>
             </div>
             <div class="toggle-row">
               <span class="toggle-label">Compact Mode</span>
