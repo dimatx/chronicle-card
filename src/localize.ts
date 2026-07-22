@@ -17,6 +17,15 @@ const translations: Record<string, TranslationDict> = {
     'chronicle.no_events': 'No events',
     'chronicle.events_count': '{count} events',
     'chronicle.group_summary': '{count} similar events',
+    'chronicle.group_events': '{count} {label} events',
+
+    // Detail dialog
+    'chronicle.detail.more_info': 'More Info',
+    'chronicle.detail.entity': 'Entity',
+    'chronicle.detail.entity_id': 'Entity ID',
+    'chronicle.detail.source': 'Source',
+    'chronicle.detail.start': 'Start',
+    'chronicle.detail.end': 'End',
     'chronicle.loading': 'Loading...',
     'chronicle.error': 'Error loading events',
     'chronicle.refresh': 'Refresh',
@@ -76,6 +85,15 @@ const translations: Record<string, TranslationDict> = {
     'chronicle.no_events': 'Keine Ereignisse',
     'chronicle.events_count': '{count} Ereignisse',
     'chronicle.group_summary': '{count} ähnliche Ereignisse',
+    'chronicle.group_events': '{count} {label} Ereignisse',
+
+    // Detail dialog
+    'chronicle.detail.more_info': 'Mehr Infos',
+    'chronicle.detail.entity': 'Entität',
+    'chronicle.detail.entity_id': 'Entitäts-ID',
+    'chronicle.detail.source': 'Quelle',
+    'chronicle.detail.start': 'Start',
+    'chronicle.detail.end': 'Ende',
     'chronicle.loading': 'Laden...',
     'chronicle.error': 'Fehler beim Laden',
     'chronicle.refresh': 'Aktualisieren',
@@ -132,6 +150,15 @@ const translations: Record<string, TranslationDict> = {
     'chronicle.no_events': "Aucun événement",
     'chronicle.events_count': '{count} événements',
     'chronicle.group_summary': '{count} événements similaires',
+    'chronicle.group_events': '{count} événements {label}',
+
+    // Detail dialog
+    'chronicle.detail.more_info': 'Plus d\'infos',
+    'chronicle.detail.entity': 'Entité',
+    'chronicle.detail.entity_id': 'ID d\'entité',
+    'chronicle.detail.source': 'Source',
+    'chronicle.detail.start': 'Début',
+    'chronicle.detail.end': 'Fin',
     'chronicle.loading': 'Chargement...',
     'chronicle.error': 'Erreur de chargement',
     'chronicle.refresh': 'Actualiser',
@@ -188,6 +215,15 @@ const translations: Record<string, TranslationDict> = {
     'chronicle.no_events': 'Sin eventos',
     'chronicle.events_count': '{count} eventos',
     'chronicle.group_summary': '{count} eventos similares',
+    'chronicle.group_events': '{count} eventos de {label}',
+
+    // Detail dialog
+    'chronicle.detail.more_info': 'Más información',
+    'chronicle.detail.entity': 'Entidad',
+    'chronicle.detail.entity_id': 'ID de entidad',
+    'chronicle.detail.source': 'Fuente',
+    'chronicle.detail.start': 'Inicio',
+    'chronicle.detail.end': 'Fin',
     'chronicle.loading': 'Cargando...',
     'chronicle.error': 'Error al cargar',
     'chronicle.refresh': 'Actualizar',
@@ -244,6 +280,15 @@ const translations: Record<string, TranslationDict> = {
     'chronicle.no_events': 'Nessun evento',
     'chronicle.events_count': '{count} eventi',
     'chronicle.group_summary': '{count} eventi simili',
+    'chronicle.group_events': '{count} eventi {label}',
+
+    // Detail dialog
+    'chronicle.detail.more_info': 'Maggiori info',
+    'chronicle.detail.entity': 'Entità',
+    'chronicle.detail.entity_id': 'ID entità',
+    'chronicle.detail.source': 'Sorgente',
+    'chronicle.detail.start': 'Inizio',
+    'chronicle.detail.end': 'Fine',
     'chronicle.loading': 'Caricamento...',
     'chronicle.error': 'Errore di caricamento',
     'chronicle.refresh': 'Aggiorna',
@@ -300,6 +345,15 @@ const translations: Record<string, TranslationDict> = {
     'chronicle.no_events': 'Sem eventos',
     'chronicle.events_count': '{count} eventos',
     'chronicle.group_summary': '{count} eventos semelhantes',
+    'chronicle.group_events': '{count} eventos de {label}',
+
+    // Detail dialog
+    'chronicle.detail.more_info': 'Mais informações',
+    'chronicle.detail.entity': 'Entidade',
+    'chronicle.detail.entity_id': 'ID da entidade',
+    'chronicle.detail.source': 'Fonte',
+    'chronicle.detail.start': 'Início',
+    'chronicle.detail.end': 'Fim',
     'chronicle.loading': 'Carregando...',
     'chronicle.error': 'Erro ao carregar',
     'chronicle.refresh': 'Atualizar',
@@ -356,6 +410,15 @@ const translations: Record<string, TranslationDict> = {
     'chronicle.no_events': 'Geen gebeurtenissen',
     'chronicle.events_count': '{count} gebeurtenissen',
     'chronicle.group_summary': '{count} vergelijkbare gebeurtenissen',
+    'chronicle.group_events': '{count} {label} gebeurtenissen',
+
+    // Detail dialog
+    'chronicle.detail.more_info': 'Meer info',
+    'chronicle.detail.entity': 'Entiteit',
+    'chronicle.detail.entity_id': 'Entiteits-ID',
+    'chronicle.detail.source': 'Bron',
+    'chronicle.detail.start': 'Start',
+    'chronicle.detail.end': 'Einde',
     'chronicle.loading': 'Laden...',
     'chronicle.error': 'Fout bij laden',
     'chronicle.refresh': 'Vernieuwen',
@@ -412,6 +475,15 @@ const translations: Record<string, TranslationDict> = {
     'chronicle.no_events': 'Inga händelser',
     'chronicle.events_count': '{count} händelser',
     'chronicle.group_summary': '{count} liknande händelser',
+    'chronicle.group_events': '{count} {label}-händelser',
+
+    // Detail dialog
+    'chronicle.detail.more_info': 'Mer info',
+    'chronicle.detail.entity': 'Entitet',
+    'chronicle.detail.entity_id': 'Entitets-ID',
+    'chronicle.detail.source': 'Källa',
+    'chronicle.detail.start': 'Start',
+    'chronicle.detail.end': 'Slut',
     'chronicle.loading': 'Laddar...',
     'chronicle.error': 'Fel vid laddning',
     'chronicle.refresh': 'Uppdatera',
@@ -468,6 +540,15 @@ const translations: Record<string, TranslationDict> = {
     'chronicle.no_events': 'Brak zdarzeń',
     'chronicle.events_count': '{count} zdarzeń',
     'chronicle.group_summary': '{count} podobnych zdarzeń',
+    'chronicle.group_events': '{count} zdarzeń: {label}',
+
+    // Detail dialog
+    'chronicle.detail.more_info': 'Więcej informacji',
+    'chronicle.detail.entity': 'Encja',
+    'chronicle.detail.entity_id': 'ID encji',
+    'chronicle.detail.source': 'Źródło',
+    'chronicle.detail.start': 'Początek',
+    'chronicle.detail.end': 'Koniec',
     'chronicle.loading': 'Ładowanie...',
     'chronicle.error': 'Błąd ładowania zdarzeń',
     'chronicle.refresh': 'Odśwież',
@@ -527,8 +608,24 @@ const translations: Record<string, TranslationDict> = {
  * @returns        The translated string, or the English fallback, or the raw
  *                 key if no translation exists at all.
  */
+/**
+ * Module-level active language. Set by <chronicle-card> from
+ * `config.language` (override) or `hass.locale.language` / `hass.language`
+ * (auto-detect), so pure helpers like date-utils can localize without
+ * threading a language parameter through every call site.
+ */
+let currentLanguage = 'en';
+
+export function setLocale(language: string): void {
+  currentLanguage = language || 'en';
+}
+
+export function getLocale(): string {
+  return currentLanguage;
+}
+
 export function localize(key: string, language?: string): string {
-  const lang = language ?? 'en';
+  const lang = language ?? currentLanguage;
 
   // Try the exact requested language
   const langDict = translations[lang];

@@ -70,7 +70,7 @@ blueprint:
         condition: {}
 
 mode: queued
-max_queued: 20
+max: 20
 
 trigger:
   - platform: state
@@ -86,7 +86,10 @@ condition:
   - condition: template
     value_template: >
       {{ trigger_state_filter == '' or trigger.to_state.state == trigger_state_filter }}
-  - !input condition_enabled
+  # Wrapped in `and` so the default `[]` input stays valid (a bare `- []` list
+  # item is rejected by HA's condition schema).
+  - condition: and
+    conditions: !input condition_enabled
 
 action:
   - service: calendar.create_event

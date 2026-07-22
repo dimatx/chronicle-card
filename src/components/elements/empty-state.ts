@@ -1,9 +1,11 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import { localize } from '../../localize';
 
 @customElement('chronicle-empty-state')
 export class EmptyState extends LitElement {
-  @property() message = 'No events found';
+  /** Empty when unset — render falls back to the localized default. */
+  @property() message = '';
 
   static styles = css`
     :host {
@@ -54,7 +56,7 @@ export class EmptyState extends LitElement {
         <div class="icon-ring">
           <ha-icon icon="mdi:timeline-clock-outline"></ha-icon>
         </div>
-        <span class="text">${this.message}</span>
+        <span class="text">${this.message || localize('chronicle.no_events')}</span>
       </div>
     `;
   }

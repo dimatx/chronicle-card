@@ -15,7 +15,7 @@ A universal, extensible timeline card for [Home Assistant](https://www.home-assi
 
 ## Features
 
-- **4 built-in source adapters** — Calendar entities, REST/WebSocket APIs, entity state history, static YAML events
+- **5 built-in source adapters** — Calendar entities, REST/WebSocket APIs, entity state history, HA logbook, static YAML events
 - **Vertical & horizontal layouts** — Toggle between a scrollable timeline and a horizontal card ribbon
 - **Automatic icon & color inference** — 150+ keyword rules match event titles to MDI icons and colors, no config needed
 - **Event grouping** — Clusters rapid events (e.g. 5 motion detections in 2 minutes) into expandable groups
@@ -24,7 +24,7 @@ A universal, extensible timeline card for [Home Assistant](https://www.home-assi
 - **Action buttons** — Call services, navigate to URLs, or fire events from each timeline entry
 - **Detail dialog** — Click any event for a rich popup with full description, image, metadata, and actions
 - **Visual config editor** — Full GUI editor in the HA dashboard editor, no YAML required
-- **Localization** — English, German, French, Spanish, Italian, Portuguese, Dutch, Swedish
+- **Localization** — English, German, French, Spanish, Italian, Portuguese, Dutch, Swedish, Polish
 - **Performance** — Virtual scrolling, debounced fetching, media URL caching
 
 ---
@@ -171,6 +171,39 @@ sources:
       "off": "Garage Closed"
 ```
 
+**Per-state colors and icons** — `state_color` and `state_icon` map raw state values to colors/icons, so e.g. an alarm panel can show armed states in green and arming in orange. States not listed fall back to the normal resolution chain (`color`/`icon` → fuzzy inference → defaults):
+
+```yaml
+sources:
+  - type: history
+    entities:
+      - alarm_control_panel.home
+    entity_config:
+      alarm_control_panel.home:
+        color: "#ff725d"          # fallback for unlisted states (e.g. disarmed)
+        state_color:
+          arming: "#ff9800"
+          armed_home: "#80ff87"
+          armed_away: "#80ff87"
+        state_icon:
+          armed_away: mdi:shield-lock
+```
+
+**Show attribute values** — `show_attributes` appends the listed attribute values to the event description, e.g. "Idle → Heating · temperature: 72". Uses the historical per-state value when available:
+
+```yaml
+sources:
+  - type: history
+    entities:
+      - climate.living_room
+      - light.kitchen
+    entity_config:
+      climate.living_room:
+        show_attributes: [temperature]
+      light.kitchen:
+        show_attributes: [brightness]
+```
+
 **Per-entity overrides** let you customize filtering, naming, and appearance for individual entities within a single source:
 
 ```yaml
@@ -252,6 +285,21 @@ Built-in device class translations:
 
 Non-binary entities (locks, covers, alarms, climate, etc.) also get human-readable labels automatically.
 
+#### Logbook Source
+
+Displays Home Assistant logbook entries — including automation and script triggers that are **too fast for the history database** to record (e.g. an automation that fires a notification and returns to idle within milliseconds). Entries render as the logbook line, e.g. *"Noise above 30dB triggered by state of binary_sensor.entry_sound"*.
+
+```yaml
+sources:
+  - type: logbook
+    name: Noise Alerts
+    entities:
+      - automation.noise_above_30db
+      - automation.noise_above_50db
+```
+
+Logbook sources are poll-based (the logbook has no lightweight push channel) — new entries appear on the next poll (`poll_interval`, default 30s). Per-entity `entity_config` overrides (`name`, `icon`, `color`, `severity`, `tap_action`, `hold_action`) work the same as for history sources.
+
 #### Static Source
 
 Define events directly in YAML. Useful for scheduled reminders or manual entries.
@@ -277,7 +325,7 @@ sources:
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `type` | string | **Required** | `calendar`, `rest`, `history`, or `static` |
+| `type` | string | **Required** | `calendar`, `rest`, `history`, `logbook`, or `static` |
 | `name` | string | `""` | Display name for the source |
 | `default_icon` | string | *auto* | Fallback MDI icon (e.g. `mdi:calendar`) |
 | `default_color` | string | *auto* | Fallback hex color (e.g. `#4CAF50`) |
@@ -301,6 +349,7 @@ sources:
 | `response_path` | string | Dot-notation path to the events array in the response (e.g. `data.events`) |
 | `field_map` | object | Map response fields to Chronicle fields. Keys are Chronicle field names, values are source field names |
 | `media_url_template` | string | URL template with `{field}` placeholders (e.g. `/api/frigate/notifications/{id}/snapshot.jpg`) |
+| `clip_url_template` | string | Video clip URL template, same `{field}` placeholders. The detail dialog plays the clip in an inline video player instead of the still/gif |
 | `poll_interval` | number | Seconds between fetches (default: 30) |
 
 **Field map keys:** `id`, `title`, `description`, `start`, `end`, `mediaUrl`, `mediaContentId`, `icon`, `color`, `category`, `label`, `severity`, `entityId`, `entityName`
@@ -313,6 +362,9 @@ sources:
 | `entity` | string | Single entity ID (shorthand — use `entities` for multiple) |
 | `state_filter` | list | Source-level default: only log events when the new state matches one of these values |
 | `state_map` | object | Source-level default: override state labels (e.g. `{"on": "Opened", "off": "Closed"}`) |
+| `state_color` | object | Source-level default: per-state color overrides, keyed by raw state value |
+| `state_icon` | object | Source-level default: per-state MDI icon overrides, keyed by raw state value |
+| `show_attributes` | list | Source-level default: attribute names appended to the event description |
 | `entity_config` | object | Per-entity overrides, keyed by entity ID. See table below |
 | `image_template` | string | Jinja2 template rendered per event to produce a thumbnail URL. Variables: `entity_id`, `state`, `old_state`, `timestamp`, `attributes`, `source_name` |
 | `tap_action` | object | Action on tap: `{ action: "more-info" \| "navigate" \| "call-service" \| "none" }` |
@@ -325,12 +377,24 @@ sources:
 | `name` | string | Custom display name (overrides friendly name) |
 | `state_filter` | list | Only log events matching these states (overrides source-level) |
 | `state_map` | object | Override state labels for this entity (overrides source-level) |
+| `state_color` | object | Per-state color overrides for this entity (e.g. `{"armed_away": "#80ff87"}`) |
+| `state_icon` | object | Per-state MDI icon overrides for this entity |
+| `show_attributes` | list | Attribute names appended to the event description (e.g. `[temperature, brightness]`) |
 | `icon` | string | MDI icon override for this entity |
 | `color` | string | Hex color override for this entity |
 | `severity` | string | Severity override (`critical`, `warning`, `info`, `debug`) |
 | `image_template` | string | Per-entity image template override |
 | `tap_action` | object | Per-entity tap action override |
 | `hold_action` | object | Per-entity hold action override |
+
+### Source Options (Logbook)
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `entities` | list | Entity IDs whose logbook entries to show (required) |
+| `entity` | string | Single entity ID (shorthand) |
+| `entity_config` | object | Per-entity overrides (`name`, `icon`, `color`, `severity`, `tap_action`, `hold_action`), keyed by entity ID |
+| `poll_interval` | number | Seconds between fetches (default: 30) |
 
 ### Source Options (Static)
 
@@ -488,6 +552,14 @@ sources:
 | `eventType` | string | Custom event type (for `fire-event` type) |
 | `eventData` | object | Custom event data |
 
+**Placeholders** — action strings (`url`, `navigation_path`, `serviceData` / `service_data` values, `eventData` values) expand `{field}` placeholders against the event they belong to: `{id}` (the raw upstream id for REST sources — e.g. the Frigate event id), `{entity}`, `{title}`, `{source}`, `{start}`, `{end}`, `{media_url}`, `{category}`, `{severity}`, plus any scalar metadata key (e.g. `{new_state}` for history events). Unknown placeholders are left as-is.
+
+```yaml
+tap_action:
+  action: navigate
+  navigation_path: /media-browser/browser/app%2Cmedia-source%3A%2F%2Ffrigate/{id}
+```
+
 ---
 
 ## Icon & Color Resolution
@@ -554,6 +626,7 @@ sources:
       category: label
       entityId: camera
     media_url_template: /api/frigate/notifications/{id}/snapshot.jpg
+    clip_url_template: /api/frigate/notifications/{id}/clip.mp4   # detail dialog plays the clip
     default_severity: info
     actions:
       - label: View Clip
@@ -824,6 +897,7 @@ The LLM caption ends up in `input_text.doorbell_last_caption` and can be surface
 | `pt` | Portuguese |
 | `nl` | Dutch |
 | `sv` | Swedish |
+| `pl` | Polish |
 
 Language is auto-detected from your Home Assistant locale. Override with the `language` option.
 

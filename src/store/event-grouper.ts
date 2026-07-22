@@ -1,5 +1,6 @@
 import { ChronicleEvent, EventGroup } from '../models/event';
 import { GroupingConfig } from '../models/config';
+import { localize } from '../localize';
 
 export function groupEvents(
   events: ChronicleEvent[],
@@ -46,19 +47,24 @@ export function groupEvents(
     // what they want to see in the summary — regardless of whether all events
     // happen to share a label. (Previously, all-default-category events would
     // render as "5 default events" even with `group_by: entity`.)
+    const groupEvents = (label: string) =>
+      localize('chronicle.group_events')
+        .replace('{count}', String(count))
+        .replace('{label}', label);
+
     switch (groupBy) {
       case 'source':
-        return `${count} ${rep.sourceId} events`;
+        return groupEvents(rep.sourceId);
       case 'entity':
-        return `${count} ${rep.entityName || rep.entityId || 'entity'} events`;
+        return groupEvents(rep.entityName || rep.entityId || 'entity');
     }
 
     // Category grouping (or fallback): prefer a shared label when present.
     const uniqueLabels = new Set(bucket.map(e => e.label || e.category).filter(Boolean));
     if (uniqueLabels.size === 1) {
-      return `${count} ${[...uniqueLabels][0]} events`;
+      return groupEvents([...uniqueLabels][0] as string);
     }
-    return `${count} ${rep.category} events`;
+    return groupEvents(rep.category);
   };
 
   const flushBucket = () => {

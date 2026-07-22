@@ -14,6 +14,10 @@ export interface EntityOverrides {
   name?: string;
   state_filter?: string[];
   state_map?: Record<string, string>;
+  state_color?: Record<string, string>;
+  state_icon?: Record<string, string>;
+  /** Attribute names whose values are appended to the event description. */
+  show_attributes?: string[];
   icon?: string;
   color?: string;
   severity?: SeverityLevel;
@@ -23,7 +27,7 @@ export interface EntityOverrides {
 }
 
 export interface SourceConfig {
-  type: 'calendar' | 'rest' | 'history' | 'static';
+  type: 'calendar' | 'rest' | 'history' | 'static' | 'logbook';
   name?: string;
   entity?: string;
   entities?: string[];
@@ -32,6 +36,12 @@ export interface SourceConfig {
   response_path?: string;
   field_map?: Record<string, string>;
   media_url_template?: string;
+  /**
+   * Optional template for a video clip URL (e.g. Frigate clip.mp4), expanded
+   * with the same `{field}` placeholders as media_url_template. When set, the
+   * detail dialog plays the clip instead of showing the still/gif thumbnail.
+   */
+  clip_url_template?: string;
   ws_params?: Record<string, unknown>;
   poll_interval?: number;
   default_icon?: string;
@@ -51,6 +61,9 @@ export interface SourceConfig {
     eventData?: Record<string, unknown>;
   }>;
   state_map?: Record<string, string>;
+  state_color?: Record<string, string>;
+  state_icon?: Record<string, string>;
+  show_attributes?: string[];
   state_filter?: string[];
   image_template?: string;
   tap_action?: ActionConfig;

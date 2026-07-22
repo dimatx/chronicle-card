@@ -165,8 +165,14 @@ export class HistoryAdapter implements ISourceAdapter {
     try {
       const startISO = range.start.toISOString();
       const endISO = range.end.toISOString();
-      // Skip minimal_response when image_template is configured — we need full attributes for template context
-      const needsAttributes = !!(this.config.image_template || this.hasEntityImageTemplates());
+      // Skip minimal_response when image_template or show_attributes is
+      // configured — both need per-state historical attributes
+      const needsAttributes = !!(
+        this.config.image_template ||
+        this.hasEntityImageTemplates() ||
+        this.config.show_attributes?.length ||
+        Object.values(this.config.entity_config ?? {}).some((c) => c.show_attributes?.length)
+      );
       const path = `history/period/${startISO}?filter_entity_id=${entities.join(',')}&end_time=${endISO}${needsAttributes ? '' : '&minimal_response'}`;
 
       const response = await hass.callApi<HistoryState[][]>('GET', path);
@@ -355,23 +361,6 @@ export class HistoryAdapter implements ISourceAdapter {
     // Smart title: strip word overlap so "Doorbell Motion" + "Motion Cleared" → "Doorbell Motion Cleared"
     const title = `${displayName} ${this.stripOverlap(displayName, newLabel)}`;
 
-    // Short description: strip the same overlap from both labels
-    const shortOld = this.stripOverlap(displayName, oldLabel);
-    const shortNew = this.stripOverlap(displayName, newLabel);
-    const description = `${shortOld} \u2192 ${shortNew}`;
-
-    // Per-entity overrides for icon, color, severity
-    const effectiveIcon = entityConf?.icon
-      || resolveIcon(title, category, undefined, this.config.icon_map, this.config.default_icon);
-    const effectiveColor = entityConf?.color
-      || resolveColor(title, category, undefined, this.config.color_map, this.config.default_color);
-    const effectiveSeverity = (entityConf?.severity || this.config.default_severity || 'info') as SeverityLevel;
-
-    // Resolve image_template and action overrides (per-entity > source-level)
-    const imageTemplate = entityConf?.image_template || this.config.image_template;
-    const tapAction = entityConf?.tap_action || this.config.tap_action;
-    const holdAction = entityConf?.hold_action || this.config.hold_action;
-
     // Collect entity attributes for template context.
     // Shallow-merge live and historical: live attrs first, historical overrides
     // on top. Per-state values win for keys present at that snapshot, while
@@ -380,6 +369,42 @@ export class HistoryAdapter implements ISourceAdapter {
     // than rendering empty.
     const liveEntity = hass.states[entityId];
     const attributes = { ...(liveEntity?.attributes ?? {}), ...(currState.attributes ?? {}) };
+
+    // Short description: strip the same overlap from both labels
+    const shortOld = this.stripOverlap(displayName, oldLabel);
+    const shortNew = this.stripOverlap(displayName, newLabel);
+    let description = `${shortOld} \u2192 ${shortNew}`;
+
+    // Append configured attribute values, e.g. "Idle \u2192 Heating \u00b7 temperature: 72"
+    const showAttrs = entityConf?.show_attributes ?? this.config.show_attributes;
+    if (showAttrs?.length) {
+      const parts = showAttrs
+        .map((name) => {
+          const v = attributes[name];
+          if (v == null || v === '' || typeof v === 'object') return null;
+          const val = typeof v === 'number' && !Number.isInteger(v) ? v.toFixed(1) : String(v);
+          return `${name.replace(/_/g, ' ')}: ${val}`;
+        })
+        .filter(Boolean);
+      if (parts.length) description += ` \u00b7 ${parts.join(' \u00b7 ')}`;
+    }
+
+    // Per-state overrides win over per-entity, which win over the fuzzy chain:
+    // state_icon/state_color[state] (entity > source) → icon/color → resolve*()
+    const effectiveIcon = entityConf?.state_icon?.[currState.state]
+      || this.config.state_icon?.[currState.state]
+      || entityConf?.icon
+      || resolveIcon(title, category, undefined, this.config.icon_map, this.config.default_icon);
+    const effectiveColor = entityConf?.state_color?.[currState.state]
+      || this.config.state_color?.[currState.state]
+      || entityConf?.color
+      || resolveColor(title, category, undefined, this.config.color_map, this.config.default_color);
+    const effectiveSeverity = (entityConf?.severity || this.config.default_severity || 'info') as SeverityLevel;
+
+    // Resolve image_template and action overrides (per-entity > source-level)
+    const imageTemplate = entityConf?.image_template || this.config.image_template;
+    const tapAction = entityConf?.tap_action || this.config.tap_action;
+    const holdAction = entityConf?.hold_action || this.config.hold_action;
 
     return {
       id: `history:${entityId}:${currState.last_changed}`,

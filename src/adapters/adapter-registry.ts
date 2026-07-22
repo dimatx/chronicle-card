@@ -3,6 +3,7 @@ import { CalendarAdapter } from './calendar-adapter';
 import { RestAdapter } from './rest-adapter';
 import { HistoryAdapter } from './history-adapter';
 import { StaticAdapter } from './static-adapter';
+import { LogbookAdapter } from './logbook-adapter';
 
 type AdapterConstructor = new () => ISourceAdapter;
 
@@ -37,3 +38,4 @@ adapterRegistry.register('calendar', CalendarAdapter);
 adapterRegistry.register('rest', RestAdapter);
 adapterRegistry.register('history', HistoryAdapter);
 adapterRegistry.register('static', StaticAdapter);
+adapterRegistry.register('logbook', LogbookAdapter);

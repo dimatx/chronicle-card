@@ -200,6 +200,11 @@ export class RestAdapter implements ISourceAdapter {
       metadata: {
         source_url: this.config.url,
         raw_index: index,
+        // Raw upstream id (pre-namespacing) — used by {id} action placeholders
+        raw_id: mappedId,
+        ...(this.config.clip_url_template
+          ? { clip_url: this.expandTemplate(this.config.clip_url_template, item) }
+          : {}),
         ...((getField('metadata', undefined) as Record<string, unknown>) || {}),
       },
     };

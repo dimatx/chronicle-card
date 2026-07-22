@@ -6,6 +6,7 @@ import { HomeAssistant } from '../../types';
 import { CATEGORY_ICONS } from '../../constants';
 import { formatTime } from '../../utils/date-utils';
 import { safeColor } from '../../utils/color-utils';
+import { expandActionConfig, expandChronicleAction } from '../../utils/action-placeholders';
 import './severity-badge';
 import './action-button';
 
@@ -248,7 +249,7 @@ export class EventItem extends LitElement {
             ${e.actions && e.actions.length > 0 ? html`
               <div class="actions-row">
                 ${e.actions.map((a) => html`
-                  <chronicle-action-button .action=${a} .hass=${this.hass}></chronicle-action-button>
+                  <chronicle-action-button .action=${expandChronicleAction(a, e)} .hass=${this.hass}></chronicle-action-button>
                 `)}
               </div>
             ` : ''}
@@ -300,7 +301,9 @@ export class EventItem extends LitElement {
   }
 
   private _handleAction(type: 'tap' | 'hold') {
-    const config = type === 'hold' ? this.event.holdAction : this.event.tapAction;
+    const rawConfig = type === 'hold' ? this.event.holdAction : this.event.tapAction;
+    // Expand {id}/{entity}/... placeholders against this event before acting
+    const config = rawConfig ? expandActionConfig(rawConfig, this.event) : rawConfig;
 
     // No config or 'default' → tap opens detail dialog (existing default behavior)
     if (!config || config.action === 'default') {

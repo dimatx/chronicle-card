@@ -1,7 +1,7 @@
 import { ActionConfig } from './config';
 
 export type SeverityLevel = 'critical' | 'warning' | 'info' | 'debug';
-export type SourceType = 'calendar' | 'rest' | 'history' | 'static';
+export type SourceType = 'calendar' | 'rest' | 'history' | 'static' | 'logbook';
 
 export interface ChronicleEvent {
   id: string;

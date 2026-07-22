@@ -252,6 +252,7 @@ export class ChronicleEditor extends LitElement {
               <button class="add-btn" @click=${() => this._addSource('rest')}>+ REST API</button>
               <button class="add-btn" @click=${() => this._addSource('history')}>+ Entity State</button>
               <button class="add-btn" @click=${() => this._addSource('static')}>+ Template</button>
+              <button class="add-btn" @click=${() => this._addSource('logbook')}>+ Logbook</button>
             </div>
           </div>
         </details>
@@ -588,8 +589,8 @@ export class ChronicleEditor extends LitElement {
       .map(s => ({ value: s.name!, label: s.name! }));
   }
 
-  private _addSource(type: 'calendar' | 'rest' | 'history' | 'static') {
-    const nameMap = { calendar: 'Calendar', rest: 'REST API', history: 'Entity State', static: 'Template' };
+  private _addSource(type: 'calendar' | 'rest' | 'history' | 'static' | 'logbook') {
+    const nameMap = { calendar: 'Calendar', rest: 'REST API', history: 'Entity State', static: 'Template', logbook: 'Logbook' };
     const sources = [...(this._config.sources ?? []), { type, name: nameMap[type] }];
     this._config = { ...this._config, sources };
     this._fire();

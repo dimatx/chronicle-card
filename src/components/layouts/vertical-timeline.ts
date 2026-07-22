@@ -2,6 +2,7 @@ import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { ChronicleEvent, EventGroup, isEventGroup } from '../../models/event';
 import { AppearanceConfig } from '../../models/config';
+import { localize, getLocale } from '../../localize';
 import '../elements/event-item';
 import '../elements/event-group';
 import '../elements/date-header';
@@ -149,12 +150,14 @@ export class VerticalTimeline extends LitElement {
       if (!sections.has(key)) {
         let label: string;
         if (key === today) {
-          label = 'Today';
+          label = localize('chronicle.today');
         } else if (key === yesterday) {
-          label = 'Yesterday';
+          label = localize('chronicle.yesterday');
         } else {
           const d = new Date(startStr);
-          label = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+          let locale: string | undefined = getLocale();
+          try { new Intl.DateTimeFormat(locale); } catch { locale = undefined; }
+          label = d.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric' });
         }
         sections.set(key, { dateKey: key, label, items: [] });
       }

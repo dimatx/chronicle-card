@@ -4,6 +4,7 @@ import { HomeAssistant } from '../types';
 import { ChronicleCardConfig, DEFAULT_CONFIG } from '../models/config';
 import { ChronicleEvent, EventGroup } from '../models/event';
 import { EventStore } from '../store/event-store';
+import { setLocale } from '../localize';
 import './layouts/vertical-timeline';
 import './layouts/horizontal-timeline';
 import './elements/detail-dialog';
@@ -46,6 +47,7 @@ export class ChronicleCard extends LitElement {
     } as ChronicleCardConfig;
 
     this._layout = this._config.layout ?? 'vertical';
+    this._syncLocale();
     this._store.configure(this._config);
 
     this._storeUnsub?.();
@@ -54,8 +56,20 @@ export class ChronicleCard extends LitElement {
     });
   }
 
+  /**
+   * Sync the module-level locale from `config.language` (explicit override)
+   * or the HA frontend language (auto-detect). Called again at render time so
+   * multiple cards with different `language` settings each render correctly.
+   */
+  private _syncLocale(): void {
+    setLocale(
+      this._config?.language || this._hass?.locale?.language || this._hass?.language || 'en',
+    );
+  }
+
   set hass(hass: HomeAssistant) {
     this._hass = hass;
+    this._syncLocale();
     this.requestUpdate();
 
     this._store.fetch(hass).catch((err: unknown) => {
@@ -181,6 +195,7 @@ export class ChronicleCard extends LitElement {
 
   protected render() {
     if (!this._config) return nothing;
+    this._syncLocale();
 
     const showHeader = this._config.show_header !== false;
     const showToggle = this._config.show_layout_toggle !== false;

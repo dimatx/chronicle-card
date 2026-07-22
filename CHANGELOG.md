@@ -1,3 +1,46 @@
+# Chronicle Card v1.13.0 — Logbook Source, Localization Fix, Per-State Colors, Clip Playback
+
+## Bug Fixes
+
+- **The `language` option (and HA language auto-detect) now actually works (#25).** The 9-language translation table existed but was never wired into the UI — every string rendered in English regardless. `Today`/`Yesterday` day headers, relative times ("just now", "5 min ago"), the detail dialog labels (More Info, Entity, Source, Start, End), the empty state, and group summaries are now localized. Formatted dates (e.g. "Mon, Mar 10") also follow the active locale. `language:` in the card config overrides; otherwise the HA frontend language is used.
+- **`chronicle_log_event` blueprint validates again (#27).** `mode: queued` used the invalid key `max_queued` (HA only accepts `max`), and the optional-condition input expanded to an invalid `- []` list item when left at its default. The condition is now wrapped in `condition: and`, which is valid for zero, one, or many conditions.
+- **History adapter no longer throws on attribute-only updates from `minimal_response` (#19,** contributed by @sunlixWhyNotAvailable). Null/undefined states are guarded before string operations in both the fetch and live-subscription paths.
+
+## New Features
+
+- **New `logbook` source type (#20).** Displays HA logbook entries — including automation/script triggers too fast for the history database to record (e.g. automations that fire and return to idle in milliseconds). Entries render as "\<name\> \<message\>" ("Noise above 30dB triggered by state of…"). Supports `entities`, `entity_config` overrides (name/icon/color/severity/actions), `icon_map`/`color_map`, and `poll_interval`. Poll-based (the logbook has no lightweight push channel). Available in the visual editor via **+ Logbook**.
+  ```yaml
+  sources:
+    - type: logbook
+      name: Noise above 30dB
+      entities:
+        - automation.bruit_entree_sup_30_db
+  ```
+- **`show_attributes` for history sources (#24).** List attribute names — per-entity (in `entity_config`) or source-level — and their values are appended to the event description, e.g. "Idle → Heating · temperature: 72". Historical per-state values are used when available (falls back to the live entity value).
+  ```yaml
+  entity_config:
+    climate.living_room:
+      show_attributes: [temperature]
+    light.kitchen:
+      show_attributes: [brightness]
+  ```
+- **Per-state colors and icons for history sources (#22).** New `state_color` and `state_icon` maps — per-entity (inside `entity_config`) or source-level — keyed by raw state value. Precedence: `state_color[state]` (entity → source) → `color` → fuzzy inference → category default → global fallback. Example:
+  ```yaml
+  entity_config:
+    alarm_control_panel.home:
+      color: "#ff725d"
+      state_color:
+        arming: "#ff9800"
+        armed_away: "#80ff87"
+      state_icon:
+        armed_away: mdi:shield-lock
+  ```
+- **`{field}` placeholders in tap/hold actions and action buttons (#21).** `navigation_path`, action `url`, `service_data`, and `eventData` strings now expand placeholders against the tapped event: `{id}` (raw upstream id for REST sources, e.g. the Frigate event id), `{entity}`, `{title}`, `{source}`, `{start}`, `{end}`, `{media_url}`, `{category}`, `{severity}`, and any scalar metadata key (e.g. `{new_state}`). Unknown placeholders are left untouched.
+- **Video clip playback in the detail dialog (#21).** A new REST-source option `clip_url_template` (same `{field}` expansion as `media_url_template`) attaches a clip URL to each event; the detail dialog plays it in an inline `<video>` player (autoplay, muted, looped, with controls) instead of the still/gif. URLs with video extensions (`.mp4`, `.webm`, `.mov`, `.m3u8`, `.mkv`, `.ogv`) in `mediaUrl` are also detected automatically. The timeline keeps showing the lightweight thumbnail.
+- **Polish localization** (contributed by @nkkfs) — the card now ships 9 languages: en, de, fr, es, it, pt, nl, sv, pl.
+
+---
+
 # Chronicle Card v1.12.1 — Editor Field Fixes & Panel Fill Height
 
 ## Bug Fixes

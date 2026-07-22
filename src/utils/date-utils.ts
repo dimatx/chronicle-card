@@ -1,10 +1,5 @@
 import { ChronicleEvent } from '../models/event';
-
-const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const MONTH_NAMES = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-];
+import { localize, getLocale } from '../localize';
 
 /**
  * Safely coerce a Date or ISO string into a Date object.
@@ -47,10 +42,12 @@ export function formatTime(date: Date | string, format: '12h' | '24h'): string {
  */
 export function formatDate(date: Date | string): string {
   const d = toDate(date);
-  const dayName = DAY_NAMES[d.getDay()];
-  const monthName = MONTH_NAMES[d.getMonth()];
-  const dayOfMonth = d.getDate();
-  return `${dayName}, ${monthName} ${dayOfMonth}`;
+  try {
+    return d.toLocaleDateString(getLocale(), { weekday: 'short', month: 'short', day: 'numeric' });
+  } catch {
+    // Invalid BCP-47 code in config.language — fall back to browser locale
+    return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+  }
 }
 
 /**
@@ -72,16 +69,16 @@ export function relativeTime(date: Date | string): string {
   const diffHr = Math.floor(diffMin / 60);
 
   if (diffSec < 60) {
-    return 'just now';
+    return localize('chronicle.time.just_now');
   }
   if (diffMin < 60) {
-    return `${diffMin} min ago`;
+    return localize('chronicle.time.minutes_ago').replace('{count}', String(diffMin));
   }
   if (diffHr < 24 && isToday(d)) {
-    return `${diffHr}h ago`;
+    return localize('chronicle.time.hours_ago').replace('{count}', String(diffHr));
   }
   if (isYesterday(d)) {
-    return 'Yesterday';
+    return localize('chronicle.time.yesterday');
   }
   return formatDate(d);
 }
@@ -151,10 +148,10 @@ export function getDateLabel(key: string): string {
     return key;
   }
   if (isToday(parsed)) {
-    return 'Today';
+    return localize('chronicle.today');
   }
   if (isYesterday(parsed)) {
-    return 'Yesterday';
+    return localize('chronicle.yesterday');
   }
   return formatDate(parsed);
 }

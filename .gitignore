@@ -3,3 +3,7 @@ node_modules/
 *.log
 .dmux/
 .dmux-hooks/
+
+# Local tooling scratch
+.serena/
+.understand-anything/

@@ -3,6 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { ChronicleEvent } from '../../models/event';
 import { CATEGORY_ICONS } from '../../constants';
 import { safeColor } from '../../utils/color-utils';
+import { localize } from '../../localize';
 
 function validIcon(icon: string): string {
   return icon && icon.startsWith('mdi:') ? icon : CATEGORY_ICONS.default;
@@ -74,6 +75,12 @@ export class DetailDialog extends LitElement {
 
     const e = this._event;
     const open = this._open;
+
+    // Prefer an explicit clip URL (metadata.clip_url, set via clip_url_template)
+    // over the thumbnail; render <video> for clips and video-extension URLs.
+    const clipUrl = (e?.metadata?.clip_url as string | undefined) || '';
+    const mediaSrc = clipUrl || e?.mediaUrl || '';
+    const mediaIsVideo = !!clipUrl || /\.(mp4|webm|mov|m3u8|mkv|ogv)([?#]|$)/i.test(mediaSrc);
 
     shadow.innerHTML = `
       <style>
@@ -309,14 +316,18 @@ export class DetailDialog extends LitElement {
           <div class="handle"></div>
           <button class="close-btn"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/></svg></button>
 
-          ${e.mediaUrl ? `
+          ${mediaSrc ? `
             <div class="media-wrap">
-              <img class="media" src="${this._escHtml(e.mediaUrl)}" alt="" />
-              <div class="media-gradient"></div>
+              ${mediaIsVideo ? `
+                <video class="media" src="${this._escHtml(mediaSrc)}" controls autoplay muted loop playsinline></video>
+              ` : `
+                <img class="media" src="${this._escHtml(mediaSrc)}" alt="" />
+                <div class="media-gradient"></div>
+              `}
             </div>
           ` : ''}
 
-          <div class="body ${e.mediaUrl ? 'body-with-media' : ''}">
+          <div class="body ${mediaSrc ? 'body-with-media' : ''}">
             <div class="header">
               <div class="header-icon" style="background-color: ${safeColor(e.color)}">
                 <ha-icon icon="${validIcon(e.icon)}"></ha-icon>
@@ -339,25 +350,25 @@ export class DetailDialog extends LitElement {
             ${e.entityId && e.sourceType === 'history' ? `
               <button class="more-info-btn" data-entity="${this._escHtml(e.entityId)}">
                 <svg viewBox="0 0 24 24" width="14" height="14"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="currentColor"/></svg>
-                More Info
+                ${this._escHtml(localize('chronicle.detail.more_info'))}
               </button>
             ` : ''}
 
             <div class="meta-table">
               ${e.entityName ? `
-                <span class="meta-label">Entity</span>
+                <span class="meta-label">${this._escHtml(localize('chronicle.detail.entity'))}</span>
                 <span class="meta-value">${this._escHtml(e.entityName)}</span>
               ` : ''}
               ${e.entityId ? `
-                <span class="meta-label">Entity ID</span>
+                <span class="meta-label">${this._escHtml(localize('chronicle.detail.entity_id'))}</span>
                 <span class="meta-value">${this._escHtml(e.entityId)}</span>
               ` : ''}
-              <span class="meta-label">Source</span>
+              <span class="meta-label">${this._escHtml(localize('chronicle.detail.source'))}</span>
               <span class="meta-value">${this._escHtml(e.sourceId)}</span>
-              <span class="meta-label">Start</span>
+              <span class="meta-label">${this._escHtml(localize('chronicle.detail.start'))}</span>
               <span class="meta-value">${this._formatDateTime(e.start)}</span>
               ${e.end && e.end !== e.start ? `
-                <span class="meta-label">End</span>
+                <span class="meta-label">${this._escHtml(localize('chronicle.detail.end'))}</span>
                 <span class="meta-value">${this._formatDateTime(e.end)}</span>
               ` : ''}
             </div>

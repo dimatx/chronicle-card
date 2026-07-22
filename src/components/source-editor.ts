@@ -136,6 +136,7 @@ export class SourceEditor extends LitElement {
     .type-badge.rest { background: rgba(156,39,176,0.12); color: #7b1fa2; }
     .type-badge.history { background: rgba(255,152,0,0.12); color: #e65100; }
     .type-badge.static { background: rgba(76,175,80,0.12); color: #2e7d32; }
+    .type-badge.logbook { background: rgba(0,150,136,0.12); color: #00695c; }
 
     .source-name {
       font-weight: 500;
@@ -336,7 +337,7 @@ export class SourceEditor extends LitElement {
 
   /** Build the summary hint (entity or url). */
   private _getHint(): string {
-    if (this.source.type === 'history') {
+    if (this.source.type === 'history' || this.source.type === 'logbook') {
       const entities = this._getHistoryEntities();
       if (entities.length === 1) return entities[0];
       if (entities.length > 1) return `${entities.length} entities`;
@@ -383,7 +384,7 @@ export class SourceEditor extends LitElement {
     return html`
       <details>
         <summary>
-          <span class="type-badge ${type}">${{calendar:'calendar',rest:'rest',history:'entity state',static:'template'}[type] || type}</span>
+          <span class="type-badge ${type}">${{calendar:'calendar',rest:'rest',history:'entity state',static:'template',logbook:'logbook'}[type] || type}</span>
           <span class="source-name">${name}</span>
           ${hint ? html`<span class="source-hint">${hint}</span>` : nothing}
           <button class="remove-btn" @click=${this._remove}>Remove</button>
@@ -399,6 +400,7 @@ export class SourceEditor extends LitElement {
                     { value: 'rest',     label: 'REST API'        },
                     { value: 'history',  label: 'Entity State'    },
                     { value: 'static',   label: 'Template'        },
+                    { value: 'logbook',  label: 'Logbook'         },
                   ],
                   mode: 'dropdown',
                 } }}
@@ -649,6 +651,21 @@ export class SourceEditor extends LitElement {
           </div>
           ${this._renderPerEntityConfig()}
           ${this._renderTemplateAndActions()}
+          ${this._renderSourceLevelDefaults()}
+        `;
+
+      case 'logbook':
+        return html`
+          <div class="field">
+            <ha-selector
+              .hass=${this.hass}
+              .selector=${{ entity: { multiple: true } }}
+              .value=${this._getHistoryEntities()}
+              .label=${"Entities"}
+              @value-changed=${this._onEntitiesChanged}
+            ></ha-selector>
+            <p class="help-text">Each logbook entry becomes a timeline event — captures automation/script triggers even when the state change is too fast for the history database. Poll-based (no live push).</p>
+          </div>
           ${this._renderSourceLevelDefaults()}
         `;
 
