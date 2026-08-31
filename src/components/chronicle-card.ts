@@ -89,6 +89,7 @@ export class ChronicleCard extends LitElement {
   connectedCallback(): void {
     super.connectedCallback();
     if (this._hass) {
+      this._liveSubscribed = true;
       this._store.subscribeLive(this._hass).catch(() => {});
     }
   }
