@@ -38,6 +38,8 @@ export class EventStore {
   private lastFetch = 0;
   private lastHash = '';
   private liveUnsubscribers: Array<() => void> = [];
+  private liveToken = 0;
+  private liveChain: Promise<void> = Promise.resolve();
   private listeners: Set<ChangeCallback> = new Set();
   private config!: ChronicleCardConfig;
   private fetchPromise: Promise<void> | null = null;
@@ -288,9 +290,29 @@ export class EventStore {
     this.applyFiltersAndGroup();
   }
 
-  async subscribeLive(hass: HomeAssistant): Promise<void> {
-    // Unsubscribe existing
+  /**
+   * Serialized so two overlapping calls cannot interleave. Each pass tears
+   * down the previous one's subscriptions before opening its own; if they ran
+   * concurrently, the teardown would run before the other pass had recorded
+   * what it opened, and those subscriptions would be orphaned.
+   */
+  subscribeLive(hass: HomeAssistant): Promise<void> {
+    this.liveChain = this.liveChain.then(
+      () => this.openLiveSubscriptions(hass),
+      () => this.openLiveSubscriptions(hass),
+    );
+    return this.liveChain;
+  }
+
+  private async openLiveSubscriptions(hass: HomeAssistant): Promise<void> {
+    // Unsubscribe existing. This also invalidates any pass still in flight, so
+    // the token must be read *after* it.
     this.unsubscribeLive();
+
+    // Safety net for a teardown that lands mid-pass (e.g. `disconnectedCallback`
+    // while this is awaiting): a superseded pass drops what it opened instead
+    // of repopulating the list.
+    const token = this.liveToken;
 
     for (const adapter of this.adapters) {
       if (adapter.subscribeLive) {
@@ -298,6 +320,10 @@ export class EventStore {
           const unsub = await adapter.subscribeLive(hass, (event) => {
             this.injectLiveEvent(event, hass);
           });
+          if (token !== this.liveToken) {
+            try { unsub(); } catch { /* ignore */ }
+            continue;
+          }
           this.liveUnsubscribers.push(unsub);
         } catch (err) {
           console.warn('[chronicle-card] Live subscription failed:', err);
@@ -307,6 +333,9 @@ export class EventStore {
   }
 
   unsubscribeLive(): void {
+    // Invalidate any in-flight subscribeLive pass so it cannot repopulate the
+    // list after this teardown.
+    this.liveToken++;
     for (const unsub of this.liveUnsubscribers) {
       try { unsub(); } catch { /* ignore */ }
     }
