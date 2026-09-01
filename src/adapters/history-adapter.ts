@@ -12,6 +12,40 @@ interface HistoryState {
   last_updated: string;
 }
 
+/**
+ * Home Assistant's compressed state format, as delivered by
+ * `subscribe_entities`: `a` = full state (sent once per entity), `c` = per
+ * entity diffs, `r` = removed entity ids. Within a diff, `+` carries added or
+ * changed fields and `-` carries removed attribute keys. `s`/`lc`/`lu` are
+ * only present when that field actually changed.
+ */
+interface CompressedState {
+  s: string;
+  a?: Record<string, unknown>;
+  lc: number;
+  lu?: number;
+}
+
+interface CompressedStateMessage {
+  a?: Record<string, CompressedState>;
+  c?: Record<
+    string,
+    {
+      '+'?: { s?: string; a?: Record<string, unknown>; lc?: number; lu?: number };
+      '-'?: { a?: string[] | Record<string, unknown> };
+    }
+  >;
+  r?: string[];
+}
+
+/**
+ * Compressed states carry timestamps as epoch seconds, while the history API
+ * (and therefore the rest of this adapter) uses ISO strings.
+ */
+function epochToISO(epoch: number): string {
+  return new Date(epoch * 1000).toISOString();
+}
+
 // ---------------------------------------------------------------------------
 // Device-class-aware state labels
 // ---------------------------------------------------------------------------
@@ -229,31 +263,85 @@ export class HistoryAdapter implements ISourceAdapter {
     const entities = this.getEntities();
     if (entities.length === 0) return () => {};
 
-    const entitySet = new Set(entities);
+    // Previous state per entity, rebuilt from the compressed diff stream.
+    // `subscribe_entities` sends deltas rather than old/new pairs, so the
+    // adapter keeps the "old" side itself.
+    const shadow = new Map<string, HistoryState>();
 
-    const unsubscribe = await hass.connection.subscribeEvents((hassEvent) => {
-      const data = hassEvent.data as {
-        entity_id?: string;
-        old_state?: HistoryState;
-        new_state?: HistoryState;
-      };
+    const unsubscribe = await hass.connection.subscribeMessage<CompressedStateMessage>(
+      (msg) => {
+        // `a` is the one-time full state for the subscribed entities (and any
+        // entity that appears later). It seeds the shadow — these are not
+        // state *changes*, so nothing is emitted for them.
+        if (msg.a) {
+          for (const entityId of Object.keys(msg.a)) {
+            const s = msg.a[entityId];
+            shadow.set(entityId, {
+              entity_id: entityId,
+              state: s.s,
+              attributes: s.a ?? {},
+              last_changed: epochToISO(s.lc),
+              last_updated: epochToISO(s.lu ?? s.lc),
+            });
+          }
+        }
 
-      if (!data.entity_id || !entitySet.has(data.entity_id)) return;
-      if (!data.old_state || !data.new_state) return;
-      if (data.old_state.state == null || data.new_state.state == null) return;
-      if (data.old_state.state === data.new_state.state) return;
+        if (msg.r) {
+          for (const entityId of msg.r) shadow.delete(entityId);
+        }
 
-      // Skip unavailable/unknown
-      if (data.new_state.state === 'unavailable' || data.new_state.state === 'unknown') return;
-      if (data.old_state.state === 'unavailable' || data.old_state.state === 'unknown') return;
+        if (!msg.c) return;
 
-      // Apply per-entity or source-level state filter
-      const stateFilter = this.getStateFilter(data.entity_id);
-      if (stateFilter && !stateFilter.has(data.new_state.state.toLowerCase())) return;
+        for (const entityId of Object.keys(msg.c)) {
+          const prev = shadow.get(entityId);
+          const diff = msg.c[entityId];
+          const plus = diff['+'] ?? {};
+          const minus = diff['-'] ?? {};
 
-      const event = this.stateChangeToEvent(hass, data.entity_id, data.old_state, data.new_state);
-      onEvent(event);
-    }, 'state_changed');
+          // Rebuild the new state by applying the diff over the previous one.
+          const attributes: Record<string, unknown> = { ...(prev?.attributes ?? {}) };
+          if (minus.a) {
+            const removed = Array.isArray(minus.a) ? minus.a : Object.keys(minus.a);
+            for (const key of removed) delete attributes[key];
+          }
+          if (plus.a) Object.assign(attributes, plus.a);
+
+          const curr: HistoryState = {
+            entity_id: entityId,
+            // `s` is only sent when the state string itself changed; an
+            // attribute-only update carries no `s` and must keep the old one.
+            state: plus.s ?? prev?.state ?? '',
+            attributes,
+            last_changed: plus.lc !== undefined ? epochToISO(plus.lc) : (prev?.last_changed ?? ''),
+            last_updated:
+              plus.lu !== undefined
+                ? epochToISO(plus.lu)
+                : plus.lc !== undefined
+                  ? epochToISO(plus.lc)
+                  : (prev?.last_updated ?? ''),
+          };
+
+          shadow.set(entityId, curr);
+
+          // First sighting of this entity is a seed, not a transition.
+          if (!prev) continue;
+
+          if (prev.state == null || curr.state == null) continue;
+          if (prev.state === curr.state) continue;
+
+          // Skip unavailable/unknown
+          if (curr.state === 'unavailable' || curr.state === 'unknown') continue;
+          if (prev.state === 'unavailable' || prev.state === 'unknown') continue;
+
+          // Apply per-entity or source-level state filter
+          const stateFilter = this.getStateFilter(entityId);
+          if (stateFilter && !stateFilter.has(curr.state.toLowerCase())) continue;
+
+          onEvent(this.stateChangeToEvent(hass, entityId, prev, curr));
+        }
+      },
+      { type: 'subscribe_entities', entity_ids: entities },
+    );
 
     return unsubscribe;
   }
