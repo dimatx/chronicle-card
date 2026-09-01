@@ -1,3 +1,21 @@
+> ### ⚠️ Temporary fork — not the upstream project
+>
+> This is a fork of [KadenThomp36/chronicle-card](https://github.com/KadenThomp36/chronicle-card)
+> carrying two performance fixes while they await review upstream:
+>
+> - **[#34](https://github.com/KadenThomp36/chronicle-card/pull/34)** — history sources subscribed to Home Assistant''s entire
+>   `state_changed` stream. Measured **538 KB/s → 0.1 KB/s** on a wall tablet.
+> - **[#35](https://github.com/KadenThomp36/chronicle-card/pull/35)** — overlapping `subscribeLive()` calls opened every
+>   subscription twice. **6 live subscriptions → 3.**
+>
+> Tracking issue: [#33](https://github.com/KadenThomp36/chronicle-card/issues/33).
+>
+> **Switch back to upstream once those PRs are merged**: remove this custom
+> repository from HACS and reinstall `KadenThomp36/chronicle-card`. Nothing else
+> is changed here, so no configuration migration is needed either way.
+>
+> Everything below is the upstream README.
+
 # Chronicle Card
 
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-support-yellow?style=flat&logo=buy-me-a-coffee)](https://buymeacoffee.com/kadenthomp36)
